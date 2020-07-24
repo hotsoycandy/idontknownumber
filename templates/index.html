@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>I don't know number</title>
+  <style>
+    * { user-select: none; }
+    body { background-color: #dddddd; }
+    canvas {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+  <canvas id='canvas' width='500' height='500'>Sorry It's not support your browser</canvas>
+  <div>
+    <input id='number-input' type='hidden' name='number' />
+    <button id='send-btn' type='submit'>보내기</button>
+    <button id='clean-btn' type='button'>지우기</button>
+  </div>
+  <p>예측값: <span id='guess'>없음</span></p>
+</body>
+
+<script type='text/javascript'>
+  const canvas = document.getElementById('canvas')
+  const numberInput = document.getElementById('number-input')
+  const sendBtn = document.getElementById('send-btn')
+  const cleanBtn = document.getElementById('clean-btn')
+  const guess = document.getElementById('guess')
+
+  const ctx = canvas.getContext('2d')
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.lineWidth  = 10
+  ctx.lineCap = 'round';
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  let lastX = null
+  let lastY = null
+
+  let mouseDown = false
+  window.onmousedown = () => mouseDown = true
+  window.onmouseup = () => {
+    lastX = null
+    lastY = null
+    mouseDown = false
+  }
+
+  canvas.onmousemove = (event) => {
+    if (!mouseDown) return
+
+    const x = event.pageX - canvas.offsetLeft
+    const y = event.pageY - canvas.offsetTop
+    if (!lastX) lastX = x
+    if (!lastY) lastY = y
+
+    ctx.beginPath()
+    ctx.moveTo(lastX, lastY)
+    ctx.lineTo(x, y)
+    ctx.stroke()
+    ctx.closePath()
+
+    lastX = x
+    lastY = y
+  }
+
+  canvas.onmouseout = () => {
+    lastX = null
+    lastY = null
+  }
+
+  sendBtn.onclick = async (event) => {
+    const imgDataUrl = canvas.toDataURL('image/png')
+    const blobBin = atob(imgDataUrl.split(',')[1])
+    const arr = []
+    for (let i = 0; i < blobBin.length; i++) arr.push(blobBin.charCodeAt(i))
+    var file = new Blob([new Uint8Array(arr)], {type: 'image/png'})
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const request = new XMLHttpRequest();
+    request.open('POST', '/guess')
+    request.send(formData)
+
+    request.onreadystatechange = function() {
+      if (request.readyState == XMLHttpRequest.DONE) {
+        guess.innerHTML = request.responseText
+      }
+    }
+  }
+
+  cleanBtn.onclick = () => {
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+  }
+</script>
+</html>
