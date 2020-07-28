@@ -20,6 +20,7 @@ python@3.6.3 에서 작업하였으며 코드에서 사용하는 모듈들이 �
 
 - django
 - keras
+- tensorflow
 - numpy
 - pillow
 - Matplotlib
